@@ -12,7 +12,7 @@ http.createServer((req, res) => {
   console.log(`HTTP server listening on port ${PORT}`);
 });
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '8970534182:AAEETTAz1zYvYV5EtRMJ0HX_wkQTrjVRkjg';
+const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
 bot.start((ctx) => {

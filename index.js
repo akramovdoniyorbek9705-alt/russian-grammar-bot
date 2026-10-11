@@ -32,22 +32,23 @@ bot.on('text', async (ctx) => {
   let headers = [];
   let rows = [];
 
-  // 1. Fe'l (Glagol) tahlili - 4 ustunli shakl (Olmosh, прошедшее, настоящее, будущее)
+  // 1. Fe'l (Glagol) tahlili - Academic capitalization & exact lower case verb format
   if (lower.endsWith('ть') || lower.endsWith('ться') || lower.endsWith('ти') || lower.endsWith('чь')) {
     wordType = "Глагол (Fe'l)";
-    headers = ["", "прошедшее", "настоящее", "Будущее"];
+    headers = ["", "Прошедшее", "Настоящее", "Будущее"];
     
-    const stem = word.replace(/(ся|ть|ти|чь)$/, '');
+    const stem = word.replace(/(ся|ть|ти|чь)$/i, '');
     const isSecondConj = lower.endsWith('ить') || lower.endsWith('еть');
+    const lowerWord = word.toLowerCase();
     
     rows = [
-      ["Я", `${stem}л`, isSecondConj ? `${stem}ю` : `${stem}ю`, `Буду ${word}`],
-      ["Ты", `${stem}л`, isSecondConj ? `${stem}ишь` : `${stem}ешь`, `Будешь ${word}`],
-      ["Он", `${stem}л`, isSecondConj ? `${stem}ит` : `${stem}ет`, `Будет ${word}`],
-      ["Она", `${stem}ла`, isSecondConj ? `${stem}ит` : `${stem}ет`, `Будет ${word}`],
-      ["Мы", `${stem}ли`, isSecondConj ? `${stem}им` : `${stem}ем`, `Будем ${word}`],
-      ["Вы", `${stem}ли`, isSecondConj ? `${stem}ите` : `${stem}ете`, `Будете ${word}`],
-      ["Они", `${stem}ли`, isSecondConj ? `${stem}ят` : `${stem}ют`, `Будут ${word}`]
+      ["Я", `${stem}л`, isSecondConj ? `${stem}ю` : `${stem}ю`, `Буду ${lowerWord}`],
+      ["Ты", `${stem}л`, isSecondConj ? `${stem}ишь` : `${stem}ешь`, `Будешь ${lowerWord}`],
+      ["Он", `${stem}л`, isSecondConj ? `${stem}ит` : `${stem}ет`, `Будет ${lowerWord}`],
+      ["Она", `${stem}ла`, isSecondConj ? `${stem}ит` : `${stem}ет`, `Будет ${lowerWord}`],
+      ["Мы", `${stem}ли`, isSecondConj ? `${stem}им` : `${stem}ем`, `Будем ${lowerWord}`],
+      ["Вы", `${stem}ли`, isSecondConj ? `${stem}ите` : `${stem}ете`, `Будете ${lowerWord}`],
+      ["Они", `${stem}ли`, isSecondConj ? `${stem}ят` : `${stem}ют`, `Будут ${lowerWord}`]
     ];
   } 
   // 2. Sifat (Prilagatelnoye) tahlili
@@ -133,7 +134,12 @@ bot.on('text', async (ctx) => {
     fs.writeFileSync(filePath, buffer);
 
     await ctx.replyWithDocument({ source: filePath, filename: `${word}_grammatika.docx` });
-    ctx.telegram.deleteMessage(ctx.chat.id, waitingMsg.message_id);
+    
+    try {
+      await ctx.telegram.deleteMessage(ctx.chat.id, waitingMsg.message_id);
+    } catch (e) {
+      console.log("Xabarni o'chirishda xato:", e.message);
+    }
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);

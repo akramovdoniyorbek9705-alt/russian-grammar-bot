@@ -1,8 +1,18 @@
 const { Telegraf } = require('telegraf');
 const { Document, Packer, Paragraph, Table, TableRow, TableCell, HeadingLevel, WidthType, AlignmentType, TextRun } = require('docx');
 const fs = require('fs');
+const http = require('http');
 
-const BOT_TOKEN = '8970534182:AAEETTAz1zYvYV5EtRMJ0HX_wkQTrjVRkjg';
+// Render.com o'chib qolmasligi uchun HTTP server portini tinglash
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running successfully!');
+}).listen(PORT, () => {
+  console.log(`HTTP server listening on port ${PORT}`);
+});
+
+const BOT_TOKEN = process.env.BOT_TOKEN || '8970534182:AAEETTAz1zYvYV5EtRMJ0HX_wkQTrjVRkjg';
 const bot = new Telegraf(BOT_TOKEN);
 
 bot.start((ctx) => {
@@ -22,21 +32,22 @@ bot.on('text', async (ctx) => {
   let headers = [];
   let rows = [];
 
-  // 1. Fe'l (Glagol) tahlili
+  // 1. Fe'l (Glagol) tahlili - 4 ustunli shakl (Olmosh, прошедшее, настоящее, будущее)
   if (lower.endsWith('ть') || lower.endsWith('ться') || lower.endsWith('ти') || lower.endsWith('чь')) {
     wordType = "Глагол (Fe'l)";
-    headers = ["Местоимение (Olmosh)", "Прошедшее время (O'tgan zamon)", "Настоящее / Будущее время (Hozirgi / Kelasi zamon)"];
+    headers = ["", "прошедшее", "настоящее", "Будущее"];
     
     const stem = word.replace(/(ся|ть|ти|чь)$/, '');
     const isSecondConj = lower.endsWith('ить') || lower.endsWith('еть');
     
     rows = [
-      ["Я (Men)", `${stem}л / ${stem}ла`, isSecondConj ? `${stem}ю` : `${stem}ю`],
-      ["Ты (Sen)", `${stem}л / ${stem}ла`, isSecondConj ? `${stem}ишь` : `${stem}ешь`],
-      ["Он / Она (U)", `он ${stem}л / она ${stem}ла`, isSecondConj ? `${stem}ит` : `${stem}ет`],
-      ["Мы (Biz)", `${stem}ли`, isSecondConj ? `${stem}им` : `${stem}ем`],
-      ["Вы (Siz)", `${stem}ли`, isSecondConj ? `${stem}ите` : `${stem}ете`],
-      ["Они (Ular)", `${stem}ли`, isSecondConj ? `${stem}ят` : `${stem}ют`]
+      ["Я", `${stem}л`, isSecondConj ? `${stem}ю` : `${stem}ю`, `Буду ${word}`],
+      ["Ты", `${stem}л`, isSecondConj ? `${stem}ишь` : `${stem}ешь`, `Будешь ${word}`],
+      ["Он", `${stem}л`, isSecondConj ? `${stem}ит` : `${stem}ет`, `Будет ${word}`],
+      ["Она", `${stem}ла`, isSecondConj ? `${stem}ит` : `${stem}ет`, `Будет ${word}`],
+      ["Мы", `${stem}ли`, isSecondConj ? `${stem}им` : `${stem}ем`, `Будем ${word}`],
+      ["Вы", `${stem}ли`, isSecondConj ? `${stem}ите` : `${stem}ете`, `Будете ${word}`],
+      ["Они", `${stem}ли`, isSecondConj ? `${stem}ят` : `${stem}ют`, `Будут ${word}`]
     ];
   } 
   // 2. Sifat (Prilagatelnoye) tahlili
@@ -48,12 +59,12 @@ bot.on('text', async (ctx) => {
     const isSoft = lower.endsWith('ий') || lower.endsWith('яя') || lower.endsWith('ее');
     
     rows = [
-      ["Именительный (Kim? Nima?)", `${word}`, `${base}${isSoft ? 'яя' : 'ая'}`, `${base}${isSoft ? 'ее' : 'ое'}`, `${base}${isSoft ? 'ие' : 'ые'}`],
-      ["Родительный (Kimning?)", `${base}${isSoft ? 'его' : 'ого'}`, `${base}${isSoft ? 'ей' : 'ой'}`, `${base}${isSoft ? 'его' : 'ого'}`, `${base}${isSoft ? 'их' : 'ых'}`],
-      ["Дательный (Kimga? Nimaga?)", `${base}${isSoft ? 'ему' : 'ому'}`, `${base}${isSoft ? 'ей' : 'ой'}`, `${base}${isSoft ? 'ему' : 'ому'}`, `${base}${isSoft ? 'им' : 'ым'}`],
-      ["Винительный (Kimni? Nimani?)", `Как Ив. или Род.`, `${base}${isSoft ? 'юю' : 'ую'}`, `${base}${isSoft ? 'ее' : 'ое'}`, `Как Ив. или Род.`],
-      ["Творительный (Kim bilan?)", `${base}${isSoft ? 'им' : 'ым'}`, `${base}${isSoft ? 'ей' : 'ой'}`, `${base}${isSoft ? 'им' : 'ым'}`, `${base}${isSoft ? 'ими' : 'ыми'}`],
-      ["Предложный (Kim haqida?)", `о ${base}${isSoft ? 'ем' : 'ом'}`, `о ${base}${isSoft ? 'ей' : 'ой'}`, `о ${base}${isSoft ? 'ем' : 'ом'}`, `о ${base}${isSoft ? 'их' : 'ых'}`]
+      ["Именительный", `${word}`, `${base}${isSoft ? 'яя' : 'ая'}`, `${base}${isSoft ? 'ее' : 'ое'}`, `${base}${isSoft ? 'ие' : 'ые'}`],
+      ["Родительный", `${base}${isSoft ? 'его' : 'ого'}`, `${base}${isSoft ? 'ей' : 'ой'}`, `${base}${isSoft ? 'его' : 'ого'}`, `${base}${isSoft ? 'их' : 'ых'}`],
+      ["Дательный", `${base}${isSoft ? 'ему' : 'ому'}`, `${base}${isSoft ? 'ей' : 'ой'}`, `${base}${isSoft ? 'ему' : 'ому'}`, `${base}${isSoft ? 'им' : 'ым'}`],
+      ["Винительный", `Как Ив. или Род.`, `${base}${isSoft ? 'юю' : 'ую'}`, `${base}${isSoft ? 'ее' : 'ое'}`, `Как Ив. или Род.`],
+      ["Творительный", `${base}${isSoft ? 'им' : 'ым'}`, `${base}${isSoft ? 'ей' : 'ой'}`, `${base}${isSoft ? 'им' : 'ым'}`, `${base}${isSoft ? 'ими' : 'ыми'}`],
+      ["Предложный", `о ${base}${isSoft ? 'ем' : 'ом'}`, `о ${base}${isSoft ? 'ей' : 'ой'}`, `о ${base}${isSoft ? 'ем' : 'ом'}`, `о ${base}${isSoft ? 'их' : 'ых'}`]
     ];
   }
   // 3. Ot (Существительное) tahlili
@@ -61,12 +72,12 @@ bot.on('text', async (ctx) => {
     wordType = "Существительное (Ot)";
     headers = ["Падеж (Kelshik)", "Единственное число (Birlik)", "Множественное число (Ko'plik)"];
     rows = [
-      ["Именительный (Kim? Nima?)", `${word}`, `${word}ы / ${word}и`],
-      ["Родительный (Kimning? Nimaning?)", `нет ${word}а / ${word}и`, `нет ${word}ов / ${word}ей`],
-      ["Дательный (Kimga? Nimaga?)", `к ${word}у / ${word}е`, `к ${word}ам / ${word}ям`],
-      ["Винительный (Kimni? Nimani?)", `вижу ${word}`, `вижу ${word}ы / ${word}и`],
-      ["Творительный (Kim bilan? Nima bilan?)", `доволен ${word}ом / ${word}ой`, `доволен ${word}ами / ${word}ями`],
-      ["Предложный (Kim haqida? Nima haqida?)", `думаю о ${word}е`, `думаю о ${word}ах / ${word}ях`]
+      ["Именительный", `${word}`, `${word}ы / ${word}и`],
+      ["Родительный", `нет ${word}а / ${word}и`, `нет ${word}ов / ${word}ей`],
+      ["Дательный", `к ${word}у / ${word}е`, `к ${word}ам / ${word}ям`],
+      ["Винительный", `вижу ${word}`, `вижу ${word}ы / ${word}и`],
+      ["Творительный", `доволен ${word}ом / ${word}ой`, `доволен ${word}ами / ${word}ями`],
+      ["Предложный", `думаю о ${word}е`, `думаю о ${word}ах / ${word}ях`]
     ];
   }
 
@@ -102,7 +113,7 @@ bot.on('text', async (ctx) => {
       sections: [{
         children: [
           new Paragraph({
-            text: `${word} (${wordType})`,
+            text: `${word}`,
             heading: HeadingLevel.HEADING_1,
             alignment: AlignmentType.CENTER,
             spacing: { after: 300 },
